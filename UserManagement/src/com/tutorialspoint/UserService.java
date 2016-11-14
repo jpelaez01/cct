@@ -10,6 +10,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
+
 import com.lmax.inputdisruptor.InputDisruptor;
 import com.lmax.outputdisruptor.OutputDisruptor;
 
@@ -17,6 +19,7 @@ import edu.uniandes.cct.serviceRequest.ServiceDeskManager;
 
 @Path("/UserService")
 public class UserService {
+    private final static Logger logger = Logger.getLogger(UserService.class);
 
 	 UserDao userDao = new UserDao();
 	 MonitoringInfoDao MonitoringInfoDao = new MonitoringInfoDao();
@@ -24,12 +27,17 @@ public class UserService {
 
 	 public UserService() {
 		System.gc();
-		InputDisruptor.startProcessing();
-		OutputDisruptor.startProcessing();
-		 if (sdm == null){
-			 sdm = new ServiceDeskManager();
-			 sdm.StartAsyncProcessing();
-		 }
+		try {
+			InputDisruptor.startProcessing();
+			OutputDisruptor.startProcessing();
+			if (sdm == null){
+				sdm = new ServiceDeskManager();
+				sdm.StartAsyncProcessing();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+            logger.fatal("Esto es información:"+ "UserService class failed, please contact system admin!");
+		}
 	 }
 
 	// @GET

@@ -15,7 +15,7 @@ public class OutputAsyncProcessing {
         this.outputQueue = outputQueue;
     }
 
-    public void createThreadPool() {
+    public void createThreadPool() throws Exception{
 
         ExecutorService ex = Executors.newFixedThreadPool(10);
         OutputAsyncThread t;
