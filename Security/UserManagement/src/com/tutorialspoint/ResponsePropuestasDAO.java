@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,21 @@ public class ResponsePropuestasDAO {
 			return resultList;
 		}
 
+		try {
+			if(!integridadInformacion()){		
+				if (errorEnCampo) {
+					resultList.add(new Propuesta("EI001", "Existe un problema con la integridade de la informacion"));
+					System.out.println("Existe un problema con la integridade de la informacion");
+					return resultList;	
+				}
+			}
+		} catch (SQLException e1) {
+			List<Propuesta> resultError = new ArrayList<Propuesta>();
+			resultError.add(new Propuesta("EDB001", "Problemas con la base de datos"));
+			return resultError;
+		}
+		
+		
 		ResultSet resultado = null;
 		if (iDsPropuestas.equals("ALL")) {
 
@@ -85,6 +101,44 @@ public class ResponsePropuestasDAO {
 		return resultList;
 	}
 
+	private boolean integridadInformacion() throws SQLException {
+
+        ResultSet resultSetCopia = null;
+        ResultSet resultSetOriginal=null;
+        
+        //Extrayendo datos de la tabla original
+        try {
+            resultSetOriginal = conexionPropOriginal();
+
+        } catch (Exception e) {
+            System.out.println("Hubo un error tabla original: " + e.getMessage());
+        }
+
+        //Extrayendo datos de la tabla copia
+        try {
+
+            resultSetCopia = conexionPropCopia();
+        } catch (Exception e) {
+            System.out.println("Hubo un error tabla copia: " + e.getMessage());
+        }
+
+        //A partir de aquí comienza la comparación
+        boolean iguales = true;
+
+        while (resultSetOriginal.next()) {
+            resultSetCopia.next();
+            ResultSetMetaData resultSetMetaData = resultSetOriginal.getMetaData();
+            int count = resultSetMetaData.getColumnCount();
+            for (int i = 1; i <= count; i++) {
+                if (!resultSetOriginal.getObject(i).equals(resultSetCopia.getObject(i))) {
+                    iguales=false;
+                }
+            }
+        }
+
+		return iguales;
+	}
+
 	private void cerrarConexion() {
 
 		if (connect != null) {
@@ -99,8 +153,8 @@ public class ResponsePropuestasDAO {
 	}
 
 	private void abrirConexion(String usuario) throws ClassNotFoundException, SQLException {
-		String password = usuario;
-		String stringConnection = "jdbc:mysql://localhost/service_desk?useSSL=true" + "&user=" + usuario + "&password="
+		String password = "admin";
+		String stringConnection = "jdbc:mysql://localhost/cct_db?useSSL=true" + "&user=" + usuario + "&password="
 				+ password;
 
 		Class.forName("com.mysql.jdbc.Driver");
@@ -179,5 +233,46 @@ public class ResponsePropuestasDAO {
 
 		return resultSet;
 	}
+	
+	Connection conPropuestaOriginal=null;
+	Connection conPropuestaCopia = null;
+	
+    public ResultSet conexionPropOriginal() {
+    	ResultSet resultSetOriginal=null;
+    	try {
+            Class.forName("com.mysql.jdbc.Driver");
+             conPropuestaOriginal = DriverManager.getConnection("jdbc:mysql://localhost/cct_db?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&user=root&password=admin");
+             String campos="propuesta_cliente_id, cliente_id, propuesta_socio_id, fecha_creacion_propuesta, fecha_presentacion_propuesta, estado_propuesta, proyecto_id, viable_tecnicamente, viable_financieramente, fecha_aceptacion, propuesta_clientecol";
+
+             PreparedStatement preparedStatementOriginal = conPropuestaOriginal.prepareStatement("SELECT " + campos + " FROM propuesta_cliente");
+             resultSetOriginal = preparedStatementOriginal.executeQuery();
+             
+             conPropuestaOriginal.close();
+             
+        } catch (Exception e) {
+        	System.out.println(e.getMessage());
+        }
+        return resultSetOriginal;
+    }
+    
+    public ResultSet conexionPropCopia() {
+    	ResultSet resultSetCopia=null;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            conPropuestaCopia = DriverManager.getConnection("jdbc:mysql://localhost/cct_db_segura?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&user=root&password=admin");
+
+            String campos="propuesta_cliente_id, cliente_id, propuesta_socio_id, fecha_creacion_propuesta, fecha_presentacion_propuesta, estado_propuesta, proyecto_id, viable_tecnicamente, viable_financieramente, fecha_aceptacion, propuesta_clientecol";
+
+            PreparedStatement preparedStatementOriginal = conPropuestaOriginal.prepareStatement("SELECT " + campos + " FROM propuesta_cliente");
+            resultSetCopia = preparedStatementOriginal.executeQuery();
+            
+            conPropuestaCopia.close();
+            
+        } catch (Exception e) {
+        	System.out.println(e.getMessage());
+        }
+        return resultSetCopia;
+    }
+	
 
 }

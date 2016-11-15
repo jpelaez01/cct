@@ -22,8 +22,8 @@ public class AccesoDB {
 		// This will load the MySQL driver, each DB has its own driver
 
 		// Setup the connection with the DB
-		String password = usuario;
-		String stringConnection = "jdbc:mysql://localhost/service_desk?useSSL=true"
+		String password = "admin";
+		String stringConnection = "jdbc:mysql://localhost/cct_db?useSSL=true"
 		        + "&user=" + usuario
 				+ "&password=" + password;
 		
