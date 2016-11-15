@@ -28,11 +28,9 @@ public class ResponsePropuestasDAO {
 
 		try {
 			if(!integridadInformacion()){		
-				if (errorEnCampo) {
-					resultList.add(new Propuesta("EI001", "Existe un problema con la integridade de la informacion"));
-					System.out.println("Existe un problema con la integridade de la informacion");
+					resultList.add(new Propuesta("EI001", "Existe un problema con la integridad de la informacion"));
+					System.out.println("Existe un problema con la integridad de la informacion");
 					return resultList;	
-				}
 			}
 		} catch (SQLException e1) {
 			List<Propuesta> resultError = new ArrayList<Propuesta>();
@@ -45,10 +43,13 @@ public class ResponsePropuestasDAO {
 		if (iDsPropuestas.equals("ALL")) {
 
 			try {
-
+				System.out.println("abriendo conexion...");
 				abrirConexion(usuario);
+				System.out.println("Haciendo consulta...");
 				resultado = consultarPropuestas();
+				System.out.println("pasando a XML...");
 				propuesta2XML(resultado);
+				System.out.println("cerrando resultado...");
 				if (resultado != null)
 					resultado.close();
 
@@ -59,6 +60,7 @@ public class ResponsePropuestasDAO {
 				return resultError;
 
 			} finally {
+				System.out.println("cerrando conexion...");
 				cerrarConexion();
 			}
 
@@ -67,6 +69,7 @@ public class ResponsePropuestasDAO {
 			String propuesta = "";
 
 			try {
+				System.out.println("abriendo segunda conexion...");
 				abrirConexion(usuario);
 
 				while (propuestas.hasMoreElements()) {
@@ -79,7 +82,7 @@ public class ResponsePropuestasDAO {
 						resultError.add(new Propuesta("EC011", "Error en campo de entrada propuestaID"));
 						return resultError;
 					}
-
+					System.out.println("consultando segunda propuesta...");
 					resultado = consultarPropuesta(propuesta);
 					propuesta2XML(resultado);
 					if (resultado != null)
@@ -136,7 +139,7 @@ public class ResponsePropuestasDAO {
             }
         }
 
-		return iguales;
+        return iguales;
 	}
 
 	private void cerrarConexion() {
@@ -170,7 +173,7 @@ public class ResponsePropuestasDAO {
         	propuesta= new Propuesta( 
         			resultado.getString("propuesta_cliente_id"), 
         			resultado.getString("propuesta_socio_id"), 
-        			resultado.getString("cliende_id"), 
+        			resultado.getString("cliente_id"), 
         			resultado.getString("fecha_presentacion_propuesta"), 
         			resultado.getString("estado_propuesta"), 
         			resultado.getString("proyecto_id"), 
@@ -190,7 +193,7 @@ public class ResponsePropuestasDAO {
 
 		String select = "SELECT " 
 				+ "propuesta_cliente_id,"
-				+ "cliende_id," 
+				+ "cliente_id," 
 				+ "propuesta_socio_id," 
 				+ "fecha_creacion_propuesta,"
 				+ "fecha_presentacion_propuesta,"
@@ -199,7 +202,7 @@ public class ResponsePropuestasDAO {
 				+ "viable_tecnicamente,"
 				+ "viable_financieramente," 
 				+ "fecha_aceptacion," 
-				+ "valor_total, " 
+				+ "valor_total " 
 				+ "FROM PROPUESTA_CLIENTE"
 				+ "WHERE propuesta_cliente_id=?";
 
@@ -215,7 +218,7 @@ public class ResponsePropuestasDAO {
 
 		String select = "SELECT " 
 				+ "propuesta_cliente_id,"
-				+ "cliende_id," 
+				+ "cliente_id," 
 				+ "propuesta_socio_id," 
 				+ "fecha_creacion_propuesta,"
 				+ "fecha_presentacion_propuesta,"
@@ -224,7 +227,7 @@ public class ResponsePropuestasDAO {
 				+ "viable_tecnicamente,"
 				+ "viable_financieramente," 
 				+ "fecha_aceptacion," 
-				+ "valor_total, " 
+				+ "valor_total " 
 				+ "FROM PROPUESTA_CLIENTE";
 
 		// Statements allow to issue SQL queries to the database
@@ -242,12 +245,13 @@ public class ResponsePropuestasDAO {
     	try {
             Class.forName("com.mysql.jdbc.Driver");
              conPropuestaOriginal = DriverManager.getConnection("jdbc:mysql://localhost/cct_db?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false&user=root&password=admin");
-             String campos="propuesta_cliente_id, cliente_id, propuesta_socio_id, fecha_creacion_propuesta, fecha_presentacion_propuesta, estado_propuesta, proyecto_id, viable_tecnicamente, viable_financieramente, fecha_aceptacion, valor_total";
+             String campos="propuesta_cliente_id, cliente_id, propuesta_socio_id, fecha_creacion_propuesta, fecha_presentacion_propuesta, estado_propuesta, proyecto_id, fecha_aceptacion, valor_total";
 
-             PreparedStatement preparedStatementOriginal = conPropuestaOriginal.prepareStatement("SELECT " + campos + " FROM propuesta_cliente");
+             PreparedStatement preparedStatementOriginal = conPropuestaOriginal.prepareStatement("SELECT " + campos + " FROM propuesta_cliente where estado_propuesta=?");
+             preparedStatementOriginal.setString(1, "Cerrada");
              resultSetOriginal = preparedStatementOriginal.executeQuery();
              
-             conPropuestaOriginal.close();
+             //conPropuestaOriginal.close();
              
         } catch (Exception e) {
         	System.out.println(e.getMessage());
@@ -261,12 +265,13 @@ public class ResponsePropuestasDAO {
             Class.forName("com.mysql.jdbc.Driver");
             conPropuestaCopia = DriverManager.getConnection("jdbc:mysql://localhost/cct_db_segura?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false&user=root&password=admin");
 
-            String campos="propuesta_cliente_id, cliente_id, propuesta_socio_id, fecha_creacion_propuesta, fecha_presentacion_propuesta, estado_propuesta, proyecto_id, viable_tecnicamente, viable_financieramente, fecha_aceptacion, valor_total";
+            String campos="propuesta_cliente_id, cliente_id, propuesta_socio_id, fecha_creacion_propuesta, fecha_presentacion_propuesta, estado_propuesta, proyecto_id, fecha_aceptacion, valor_total";
 
-            PreparedStatement preparedStatementOriginal = conPropuestaOriginal.prepareStatement("SELECT " + campos + " FROM propuesta_cliente");
+            PreparedStatement preparedStatementOriginal = conPropuestaOriginal.prepareStatement("SELECT " + campos + " FROM propuesta_cliente where estado_propuesta=?");
+           preparedStatementOriginal.setString(1, "Cerrada");
             resultSetCopia = preparedStatementOriginal.executeQuery();
             
-            conPropuestaCopia.close();
+            //conPropuestaCopia.close();
             
         } catch (Exception e) {
         	System.out.println(e.getMessage());

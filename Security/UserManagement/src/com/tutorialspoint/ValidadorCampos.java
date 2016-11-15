@@ -107,7 +107,7 @@ public class ValidadorCampos {
 	}
 
 	public Boolean validarUsuario(String usuario) {
-		if (usuario.length() != 10)
+		if (usuario.length() > 20)
 			return true;
 		if (tieneCaracteresEspeciales(usuario))
 			return true;
